@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grafana_gridder"
+version = "0.0.2"
+description = "Create Grid layouts for Grafana dashboards."
+readme = "README.md"
+authors = [{ name = "Eduard Dranca", email = "ggridder@proton.me" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["grafana", "grid", "dashboard"]
+dependencies = [
+    "attr==0.3.2",
+    "attrs==23.2.0",
+    "grafanalib==0.7.1"
+
+]
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://github.com/EduardDranca/GrafanaGridder"
+Issues = "https://github.com/EduardDranca/GrafanaGridder/issues"
