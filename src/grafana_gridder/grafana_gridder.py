@@ -76,6 +76,8 @@ class PanelGroup:
             current_x = 0
             panel_sizes_sum = sum(list(map(lambda size: size.value, [size for size in panel_sizes])))
             panel_sizes_units = [size.value / panel_sizes_sum * _MAX_WIDTH for size in panel_sizes]
+            panel_sizes_units = [round(unit) for unit in panel_sizes_units[:-1]]
+            panel_sizes_units[-1] = _MAX_WIDTH - sum(panel_sizes_units[:-1])
             for width in panel_sizes_units:
                 panel = self.panels[panel_index]
                 panel.gridPos = GridPos(x=current_x, y=current_y, w=width, h=self.row_heights[row_index])
