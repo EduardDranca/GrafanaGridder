@@ -1,5 +1,8 @@
 from enum import Enum
-from grafanalib.core import GridPos
+from math import floor
+from typing import List, Union
+
+from grafanalib.core import GridPos, Panel, RowPanel
 
 _MAX_WIDTH = 24
 
@@ -45,19 +48,23 @@ class PanelGroup:
            if provided, it takes priority over the panel_height
     :param row: a Row panel that will be placed at the top of the grid, optional
     """
-    def __init__(self, layout, panels, panel_height=8, y=0, row_heights=None, row=None):
-        assert layout is not None, 'layout cannot be None'
-        self._layout = layout
-        if not isinstance(layout[0], list):
-            assert len(panels) % len(layout) == 0, 'Panel count does not match layout'
-            self._layout = [layout] * int(len(panels) / len(layout))
-        assert sum(len(row) for row in self._layout) == len(panels), 'Panel count does not match layout'
 
-        if row_heights is None:
-            self.row_heights = [panel_height] * len(self._layout)
-        else:
+    def __init__(
+            self,
+            layout: Union[List[List[PanelSize]], List[PanelSize]],
+            panels: List[Panel],
+            y: int = 0,
+            row_heights: Union[List[int], int] = 8,
+            row: RowPanel = None,
+    ):
+        assert layout is not None, 'layout cannot be None'
+        self._layout = layout if isinstance(layout[0], list) else [layout] * (len(panels) // len(layout))
+        assert sum(len(row) for row in self._layout) == len(panels), 'Panel count does not match layout'
+        if isinstance(row_heights, list):
             assert len(row_heights) == len(self._layout), 'Row height count does not match layout'
             self.row_heights = row_heights
+        else:
+            self.row_heights = [row_heights] * len(self._layout)
 
         self.row = row
         self._y = y
@@ -74,10 +81,8 @@ class PanelGroup:
             current_y += 2
         for row_index, panel_sizes in enumerate(self._layout):
             current_x = 0
-            panel_sizes_sum = sum(list(map(lambda size: size.value, [size for size in panel_sizes])))
-            panel_sizes_units = [size.value / panel_sizes_sum * _MAX_WIDTH for size in panel_sizes]
-            panel_sizes_units = [round(unit) for unit in panel_sizes_units[:-1]]
-            panel_sizes_units[-1] = _MAX_WIDTH - sum(panel_sizes_units[:-1])
+            panel_sizes_values = [size.value for size in panel_sizes]
+            panel_sizes_units = self._create_width_units_array(panel_sizes_values, _MAX_WIDTH)
             for width in panel_sizes_units:
                 panel = self.panels[panel_index]
                 panel.gridPos = GridPos(x=current_x, y=current_y, w=width, h=self.row_heights[row_index])
@@ -85,7 +90,18 @@ class PanelGroup:
                 panel_index += 1
             current_y += self.row_heights[row_index] + 1
 
-    def set_y(self, y):
+    @staticmethod
+    def _create_width_units_array(arr: List[int], total_width: int) -> List[int]:
+        total_sum = sum(arr)
+        result = [max(1, floor(total_width / total_sum * elem)) for elem in arr]
+        delta = total_width - sum(result)
+        if delta > 0:
+            idx = sorted(range(len(result)), key=lambda i: result[i], reverse=True)
+            for i in range(delta):
+                result[idx[i]] += 1
+        return result
+
+    def set_y(self, y: int):
         """Sets the position of the PanelGroup on the y-axis"""
         assert y >= 0, 'y-axis position must be at least 0'
         delta = y - self._y
@@ -95,7 +111,7 @@ class PanelGroup:
             panel.gridPos.y += delta
         self._y = y
 
-    def get_height(self):
+    def get_height(self) -> int:
         """Returns the height of the PanelGroup"""
         return self.height
 
@@ -108,28 +124,26 @@ class PanelPositioning:
 
     :param panel_groups: a list of PanelGroups or PanelPositioning objects
     """
-    def __init__(self, panel_groups=None):
-        if panel_groups is None:
-            panel_groups = []
-        self.panel_groups = panel_groups
-        self.y = 0
-        self.height = 0
 
-    def add_panel_group(self, panel_group):
+    def __init__(self, panel_groups: List[Union[PanelGroup, 'PanelPositioning']] = None):
+        self.panel_groups = panel_groups or []
+        self.y = 0
+
+    def add_panel_group(self, panel_group: Union[PanelGroup, 'PanelPositioning']):
         """Adds a PanelGroup or a PanelPositioning to the PanelPositioning"""
         self.panel_groups.append(panel_group)
 
-    def get_height(self):
+    def get_height(self) -> int:
         """Returns the height of the PanelPositioning"""
         return sum([panel_group.get_height() for panel_group in self.panel_groups])
 
-    def set_y(self, y):
+    def set_y(self, y: int):
         """Sets the position of the PanelPositioning on the y-axis"""
         assert y >= 0, 'y-axis position must be at least 0'
         self.y = y
 
     @property
-    def panels(self):
+    def panels(self) -> List[object]:
         current_y = self.y
         for group in self.panel_groups:
             group.set_y(current_y)
@@ -140,4 +154,3 @@ class PanelPositioning:
                 panels.append(group.row)
             panels.extend(group.panels)
         return panels
-
