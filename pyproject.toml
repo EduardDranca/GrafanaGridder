@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "grafana_gridder"
-version = "0.0.2"
+dynamic = ["version"]
 description = "Create Grid layouts for Grafana dashboards."
 readme = "README.md"
 authors = [{ name = "Eduard Dranca", email = "ggridder@proton.me" }]
@@ -19,9 +19,11 @@ dependencies = [
     "attr==0.3.2",
     "attrs==23.2.0",
     "grafanalib==0.7.1"
-
 ]
 requires-python = ">=3.9"
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
 
 [project.urls]
 Homepage = "https://github.com/EduardDranca/GrafanaGridder"
