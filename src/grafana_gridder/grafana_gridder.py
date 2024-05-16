@@ -42,7 +42,6 @@ class PanelGroup:
 
     :param layout: a list representing the layout of the panels in the grid
     :param panels: the panels to be placed in the grid
-    :param panel_height: the height of each panel in the grid
     :param y: the y-coordinate of the top of the grid
     :param row_heights: a list of the heights of each row in the grid;
            if provided, it takes priority over the panel_height
